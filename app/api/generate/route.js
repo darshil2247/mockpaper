@@ -98,8 +98,13 @@ export async function POST(request) {
 
   } catch (err) {
     console.error("[generate] Error calling Anthropic:", err);
+    console.error("[generate] Error details:", {
+      status: err?.status,
+      message: err?.message,
+      error: err?.error,
+    });
 
-    // Surface helpful errors in development
+    // Surface helpful errors
     if (err?.status === 401) {
       return Response.json(
         { error: "Invalid Anthropic API key. Check your ANTHROPIC_API_KEY environment variable." },
@@ -107,8 +112,15 @@ export async function POST(request) {
       );
     }
 
+    if (err?.status === 400) {
+      return Response.json(
+        { error: `Anthropic API error: ${err?.message || "Bad request format"}` },
+        { status: 500 }
+      );
+    }
+
     return Response.json(
-      { error: "Failed to generate exam. Please try again." },
+      { error: `Failed to generate exam: ${err?.message || "Unknown error"}` },
       { status: 500 }
     );
   }
